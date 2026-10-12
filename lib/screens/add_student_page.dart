@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/student.dart';
 
 class AddStudentPage extends StatefulWidget {
-  const AddStudentPage({super.key});
+  final Student? student;
+
+  const AddStudentPage({super.key, this.student});
 
   @override
   State<AddStudentPage> createState() => _AddStudentPageState();
@@ -14,6 +16,18 @@ class _AddStudentPageState extends State<AddStudentPage> {
   final courseController = TextEditingController();
   final yearController = TextEditingController();
   final emailController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final student = widget.student;
+    if (student != null) {
+      nameController.text = student.name;
+      courseController.text = student.course;
+      yearController.text = student.yearLevel.toString();
+      emailController.text = student.email;
+    }
+  }
 
   @override
   void dispose() {
@@ -27,7 +41,9 @@ class _AddStudentPageState extends State<AddStudentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Student')),
+      appBar: AppBar(
+        title: Text(widget.student == null ? 'Add Student' : 'Edit Student'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -67,7 +83,25 @@ class _AddStudentPageState extends State<AddStudentPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                final yearLevel = int.tryParse(yearController.text);
+                final name = nameController.text.trim();
+                final course = courseController.text.trim();
+                final yearLevel = int.tryParse(yearController.text.trim());
+                final email = emailController.text.trim();
+
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter the student name.'),
+                    ),
+                  );
+                  return;
+                }
+                if (course.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter the course.')),
+                  );
+                  return;
+                }
                 if (yearLevel == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -76,18 +110,28 @@ class _AddStudentPageState extends State<AddStudentPage> {
                   );
                   return;
                 }
+                if (email.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter the email.')),
+                  );
+                  return;
+                }
 
                 final student = Student(
-                  id: DateTime.now().millisecondsSinceEpoch,
-                  name: nameController.text,
-                  course: courseController.text,
+                  id:
+                      widget.student?.id ??
+                      DateTime.now().millisecondsSinceEpoch,
+                  name: name,
+                  course: course,
                   yearLevel: yearLevel,
-                  email: emailController.text,
+                  email: email,
                 );
 
                 Navigator.pop(context, student);
               },
-              child: const Text('Save Student'),
+              child: Text(
+                widget.student == null ? 'Save Student' : 'Update Student',
+              ),
             ),
           ],
         ),
